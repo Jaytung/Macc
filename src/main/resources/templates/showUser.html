@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+body {
+	font-family: Arial, sans-serif;
+	background-color: #f2f2f2;
+	margin: 0;
+	padding: 0;
+}
+
+h2 {
+	text-align: center;
+	margin-top: 20px;
+}
+
+table {
+	width: 80%;
+	margin: 20px auto;
+	background-color: #ffffff;
+	border-collapse: collapse;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	border: 1px solid #dddddd;
+}
+
+th, td {
+	padding: 10px;
+	border-bottom: 1px solid #dddddd;
+	border-right: 1px solid #dddddd;
+}
+
+th:last-child, td:last-child {
+	border-right: none;
+}
+
+.actions {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.actions button {
+	margin: 5px;
+	padding: 5px 10px;
+	border-radius: 3px;
+	border: none;
+	cursor: pointer;
+}
+
+.actions button.edit {
+	background-color: #4caf50;
+	color: #ffffff;
+}
+
+.actions button.delete {
+	background-color: #f44336;
+	color: #ffffff;
+}
+
+.actions button.setting {
+	background-color: #FFA500;
+	color: #ffffff;
+}
+
+.modal-content {
+	background-color: #fefefe;
+	margin: 15% auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 400px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.close:hover, .close:focus {
+	color: black;
+	text-decoration: none;
+}
+
+.modal {
+	display: none;
+	position: fixed;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-form label {
+	display: block;
+	margin-bottom: 5px;
+}
+
+.modal-form input {
+	width: 100%;
+	padding: 5px;
+	margin-bottom: 10px;
+}
+
+.modal-form button {
+	margin-right: 5px;
+	padding: 5px 10px;
+	border-radius: 3px;
+	border: none;
+	cursor: pointer;
+}
+
+.modal-form button.save {
+	background-color: #4caf50;
+	color: #ffffff;
+}
+
+.modal-form button.cancel {
+	background-color: #f44336;
+	color: #ffffff;
+}
+
+.back-button {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+}
+
+.back-button button {
+	padding: 5px 10px;
+	border-radius: 3px;
+	border: none;
+	cursor: pointer;
+}
+
+.back-button button.back {
+	background-color: #2196f3;
+	color: #ffffff;
+}
+
+.project-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* 调整复选框与标签之间的间距 */
+.project-container input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* 可能需要为标签添加一些宽度，以便更好地控制布局 */
+.project-container label {
+    width: 150px;
+}
+
+</style>
+</head>
+<body>
+	<h2>使用者資料</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>帳號</th>
+				<th>電子郵件</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="user : ${users}">
+				<td class="user-id" th:text="${user.userid}"></td>
+				<td th:text="${user.email}"></td>
+				<td class="actions">
+					<button class="edit">資料編輯</button>
+					<button class="delete">用戶刪除</button>
+					<button class="setting">專案設定</button>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<div id="userModal" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h2>Edit User</h2>
+			<div class="modal-form">
+				<label>User ID:</label> <span id="modal-userid"></span> <label>Password:</label>
+				<input id="modal-passwd" type="password"> <label>Email:</label>
+				<input id="modal-email" type="email"> <label>role:</label>
+				<input id="modal-role" type="text">
+				<button id="modal-save" class="save">Save</button>
+				<button id="modal-cancel" class="cancel">Cancel</button>
+				<!-- 新增取消按钮 -->
+			</div>
+		</div>
+
+
+	</div>
+	<div id="deleteModal" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h2>Delete User</h2>
+			<div class="modal-form">
+				<p>確定刪除?</p>
+				<button id="confirm-delete" class="save">Delete</button>
+				<button class="cancel">Cancel</button>
+			</div>
+		</div>
+	</div>
+	<div id="settingsModal" class="modal">
+		<div class="modal-content">
+			<span class="close" id="closeSettingsModal">&times;</span>
+			<h2>專案設定</h2>
+			<div class="modal-form">
+				<label>User ID:</label> <span id="modal-user-id"></span> <label>擁有專案</label>
+				<div id="project-list"></div>
+				<button id="modal-load-settings" class="save">載入設定</button>
+				<button class="cancel">取消</button>
+			</div>
+		</div>
+	</div>
+	<script>
+		$(document).ready(
+				function() {
+					$(".edit").click(
+							function() {
+								var userId = $(this).closest("tr").find(
+										"td:eq(0)").text();
+								$.ajax({
+									url : "/macc/getUserModal",
+									method : "GET",
+									data : {
+										userId : userId
+									},
+									success : function(response) {
+										$("#modal-userid")
+												.text(response.userid);
+										$("#modal-passwd").val(
+												response.password);
+										$("#modal-email").val(response.email);
+										$("#modal-role").val(
+												response.role);
+
+										$("#userModal").show();
+									},
+									error : function() {
+										alert("Failed to fetch user data!");
+									}
+								});
+							});
+
+					$(".delete")
+							.click(
+									function() {
+										var userId = $(this).closest("tr")
+												.find(".user-id").text();
+										$("#deleteModal")
+												.data("userid", userId).show();
+									});
+
+					$(".close, #modal-cancel, .cancel").click(function() {
+						$("#userModal").hide();
+						$("#deleteModal").hide();
+					});
+
+					$(".cancel").click(function() {
+						$("#deleteModal").hide();
+					});
+					$("#closeSettingsModal, .cancel").click(function() {
+				        $("#settingsModal").hide();
+				    });
+					$("#confirm-delete").click(
+							function() {
+								var userId = $("#deleteModal").data("userid");
+
+								$.ajax({
+									url : "/macc/delete", // 后端删除接口的URL
+									method : "POST",
+									data : {
+										userId : userId
+									},
+									success : function() {
+										$("#deleteModal").hide();
+										$(
+												".delete[data-userid='"
+														+ userId + "']")
+												.closest("tr").remove();
+										location.reload();
+
+									},
+									error : function() {
+										alert("无法删除用户！");
+									}
+								});
+							});
+
+					$("#modal-save").click(function() {
+						var newEmail = $("#modal-email").val();
+						var newPassword = $("#modal-passwd").val();
+						var newrole = $("#modal-role").val();
+
+						var userId = $("#modal-userid").text();
+						$.ajax({
+							url : "/macc/update",
+							method : "POST",
+							data : {
+								userId : userId,
+								password : newPassword,
+								email : newEmail,
+								role : newrole
+							},
+							success : function() {
+								$("#userModal").hide();
+								location.reload();
+
+							},
+							error : function() {
+								alert("Failed to save user data!");
+							}
+						});
+					});
+
+					$(".setting").click(function() {
+					    $("#settingsModal").show();
+					    
+					    var userId = $(this).closest("tr").find(".user-id").text();
+					    $("#modal-user-id").text(userId);
+					    
+					    $.ajax({
+					        url: "/macc/getProjectList",
+					        method: "GET",
+					        data: {
+					            userId: userId
+					        },
+					        success: function(response) {
+					            var projectList = $("#project-list");
+					            projectList.empty();
+					            for (var i = 0; i < response.length; i++) {
+					                var projectName = response[i][0];
+					                var projectValue = response[i][1];
+					                var connectionStatus = response[i][2]; // 连接状态
+
+					                var container = $('<div class="project-container">');
+					                var checkbox = $('<input type="checkbox">').attr('name', 'projects').val(projectValue);
+
+					                // 根据连接状态设置复选框的勾选状态
+					                if (connectionStatus === '1' ) {
+					                    checkbox.prop('checked', true);
+					                }
+
+					                container.append(checkbox);
+					                var label = $('<label>').text(projectName);
+					                container.append(label);
+
+					                projectList.append(container);
+					            }
+
+
+					        },
+					        error: function() {
+					            alert("無法取得專案清單！");
+					        }
+					    });
+					});
+					$("#modal-load-settings").click(function() {
+					    var selectedProjects = $('input[name="projects"]').map(function() {
+					        var isChecked = $(this).prop('checked') ? 1 : 0;
+					        return { projectName: $(this).val(), connectionStatus: isChecked };
+					    }).get();
+					    var userId = $("#modal-user-id").text();
+					    $("#modal-user-id").text(userId);
+					    // 使用 AJAX POST 請求將選取的專案和 userId 送回伺服器，進行保存等操作
+					    $.ajax({
+					        url: "/macc/saveSelectedProjects",
+					        method: "POST",
+					        contentType: "application/json", // 设置请求内容类型为 JSON
+					        data: JSON.stringify({
+					            userId: userId,
+					            selectedProjects: selectedProjects
+					        }),
+					        success: function() {
+					            $("#settingsModal").hide();
+					            // 在這裡執行其他相關操作
+					        },
+					        error: function() {
+					            alert("無法儲存專案設定！");
+					        }
+					    });
+					});
+
+
+
+				});
+	</script>
+</body>
+</html>

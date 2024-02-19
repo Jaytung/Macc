@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>登入系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 400px;
+            margin-top: 50px;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: none;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .btn-link {
+            font-size: 14px;
+        }
+
+        .form-check {
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>創建資料</h2>
+            </div>
+            <form action="/macc/create" method="post">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="userid">帳號:</label>
+                        <input type="text" id="userid" name="userid" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">密碼:</label>
+                        <input type="password" id="newPassword" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmail">電子郵件:</label>
+                        <input type="email" id="newEmail" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>權限:</label>
+                        <div class="form-check">
+                            <input type="radio" id="role1" name="role" value="USER" class="form-check-input" checked>
+                            <label class="form-check-label" for="permission1" >使用者</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" id="role2" name="role" value="ADMIN" class="form-check-input">
+                            <label class="form-check-label" for="permission2">管理者</label>
+                        </div>
+                        <!-- 添加更多的单选框，根据需要 -->
+                    </div>
+                    <button type="submit" class="btn btn-primary">創建</button>
+                    <p th:text="${errorMessage}" th:if="${errorMessage}" class="text-danger mt-3"></p>
+                    <p th:text="${errorCreate}" th:if="${errorCreate}" class="text-danger mt-3"></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

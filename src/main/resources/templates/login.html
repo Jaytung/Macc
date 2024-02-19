@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>登入系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 400px;
+            margin-top: 50px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: none;
+            text-align: center;
+            font-weight: bold;
+        }
+        .card-body {
+            padding: 30px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .btn-link {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>登入系統</h2>
+            </div>
+            <div class="card-body">
+                <form action="/macc/login" method="post">
+                    <div class="form-group">
+                        <label for="userid">帳號:</label>
+                        <input type="text" id="userid" name="userid" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密碼:</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="text-center mt-3">
+                    	<button type="submit" class="btn btn-primary">登入</button>
+	                </div>
+                </form>
+                <p th:text="${errorMessage}" th:if="${errorMessage}" class="text-danger mt-3"></p>
+                <p th:text="${errorCreate}" th:if="${errorCreate}" class="text-danger mt-3"></p>
+                
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

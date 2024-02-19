@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 共有8個級別，按照從低到高為：All < Trace < Debug < Info < Warn < Error < Fatal < OFF. -->
+<Configuration status="WARN">
+	<Properties>
+		<Property name="APP_NAME">WPSS</Property>
+		<Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss} %-5p %l - %m%n</Property>
+		<Property name="LOG_HOME">/opt/cp2/log</Property>
+		<Property name="AP_LOG_HOME">/ap_logs</Property>
+	</Properties>
+	<Appenders>
+		<!--這個輸出控制台的配置 -->
+		<Console name="console" target="SYSTEM_OUT">
+			<!-- 輸出日誌的格式 -->
+			<PatternLayout pattern="${PATTERN}" />
+		</Console>
+		<!--檔案會打印出所有資訊，這個log每次執行程式會自動清空，由append屬性決定，這個也挺有用的，適合臨時測試用 -->
+		<RollingRandomAccessFile name="WPSS_logFile"
+			immediateFlush="true" fileName="${AP_LOG_HOME}/${APP_NAME}.log"
+			filePattern="${AP_LOG_HOME}/${APP_NAME}.log-%d{yyyyMMdd}.log">
+			<RegexFilter regex="(^[^\r\n]*)(Input validaiton excludes canonicalization.  Context:)([^\r\n]*)(Token|TOKEN|token|Password|passowrd|PASSWORD|PW|pw|Pw)([^\r\n]*)Input: ([^\r\n]*)" 
+				onMatch="DENY" onMismatch="ACCEPT"/>
+			<PatternLayout pattern="${PATTERN}" />
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+			<DefaultRolloverStrategy max="100">
+				<Delete basePath="${AP_LOG_HOME}" maxDepth="1">
+					<IfFileName glob="${APP_NAME}.log-*.log" />
+					<IfLastModified age="60d" />
+				</Delete>
+			</DefaultRolloverStrategy>
+		</RollingRandomAccessFile>
+	</Appenders>
+	
+	<Loggers>
+		<!-- <Logger name="CP2_LOG" level="INFO" additivity="true">
+			<AppenderRef ref="CP2_logFile" />
+		</Logger> -->
+		<Root level="info">
+			<AppenderRef ref="WPSS_logFile" />
+			<AppenderRef ref="console" />
+		</Root>
+	</Loggers>
+</Configuration>

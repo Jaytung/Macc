@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <style>
+	        body {
+	            font-family: Arial, sans-serif;
+	            background-color: #f2f2f2;
+	            margin: 0;
+	            padding: 0;
+	        }
+		    h2 {
+		        text-align: center;
+		        margin-top: 20px;
+		    }
+		    table {
+		        width: 80%;
+		        margin: 20px auto;
+		        background-color: #ffffff;
+		        border-collapse: collapse;
+		        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		        border: 1px solid #dddddd;
+		    }
+		    
+		    th, td {
+		        padding: 10px;
+		        border-bottom: 1px solid #dddddd;
+		        border-right: 1px solid #dddddd;
+		    }
+		    
+		    th:last-child, td:last-child {
+		        border-right: none;
+		    }
+		    
+		    .actions {
+		        display: flex;
+		        justify-content: center;
+		        align-items: center;
+		    }
+		    
+		    .actions button {
+		        margin: 5px;
+		        padding: 5px 10px;
+		        border-radius: 3px;
+		        border: none;
+		        cursor: pointer;
+		    }
+		    
+		    .actions button.edit {
+		        background-color: #4caf50;
+		        color: #ffffff;
+		    }
+		    
+		    .actions button.delete {
+		        background-color: #f44336;
+		        color: #ffffff;
+		    }
+		    
+		    .modal {
+		        display: none;
+		        position: fixed;
+		        z-index: 1;
+		        left: 0;
+		        top: 0;
+		        width: 100%;
+		        height: 100%;
+		        overflow: auto;
+		        background-color: rgba(0, 0, 0, 0.4);
+		    }
+		    
+		    .modal-content {
+		        background-color: #fefefe;
+		        margin: 15% auto;
+		        padding: 20px;
+		        border: 1px solid #888;
+		        width: 400px;
+		        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+		    }
+		    
+		    .close {
+		        color: #aaa;
+		        float: right;
+		        font-size: 28px;
+		        font-weight: bold;
+		        cursor: pointer;
+		    }
+		    
+		    .close:hover,
+		    .close:focus {
+		        color: black;
+		        text-decoration: none;
+		    }
+		    
+		    .modal-form label {
+		        display: block;
+		        margin-bottom: 5px;
+		    }
+		    
+		    .modal-form input {
+		        width: 100%;
+		        padding: 5px;
+		        margin-bottom: 10px;
+		    }
+		    
+		    .modal-form button {
+		        margin-right: 5px;
+		        padding: 5px 10px;
+		        border-radius: 3px;
+		        border: none;
+		        cursor: pointer;
+		    }
+		    
+		    .modal-form button.save {
+		        background-color: #4caf50;
+		        color: #ffffff;
+		    }
+		    
+		    .modal-form button.cancel {
+		        background-color: #f44336;
+		        color: #ffffff;
+		    }
+		    
+		    .back-button {
+		        display: flex;
+		        justify-content: center;
+		        margin-top: 20px;
+		    }
+		    
+		    .back-button button {
+		        padding: 5px 10px;
+		        border-radius: 3px;
+		        border: none;
+		        cursor: pointer;
+		    }
+		    
+		    .back-button button.back {
+		        background-color: #2196f3;
+		        color: #ffffff;
+		    }
+		    .month {
+        background-color: #ffffff;
+        color: #333; /* 按钮文本颜色 */
+        border: 1px solid #333; /* 边框颜色 */
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* 鼠标悬停时的按钮效果 */
+    .month:hover {
+        background-color: #333; /* 背景颜色 */
+        color: #ffffff; /* 按钮文本颜色 */
+    }
+
+    /* 活动按钮的样式 */
+    .active {
+        background-color: #4caf50; /* 活动按钮背景颜色 */
+        color: #ffffff; /* 活动按钮文本颜色 */
+    }
+    .custom-button-style {
+    background-color: #4caf50; /* 背景颜色 */
+    color: #ffffff; /* 文本颜色 */
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.custom-button-style:hover {
+    background-color: #333; /* 鼠标悬停时的背景颜色 */
+    color: #ffffff; /* 鼠标悬停时的文本颜色 */
+}
+.actions button.export {
+    background-color: #28a745; /* 更改背景颜色为绿色 */
+    color: #fff; /* 更改文字颜色为白色 */
+    border: none;
+    border-radius: 3px;
+    padding: 5px 15px; /* 增加内边距以提高按钮大小 */
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* 添加过渡效果 */
+}
+
+.actions button.export:hover {
+    background-color: #1e7e34; /* 鼠标悬停时改变背景颜色 */
+}
+     	
+    
+		</style>
+		
+</head>
+<body>
+    <h2>Monthly Cost Data Grouped</h2>
+    <div id="monthButtons" style="text-align: center;">
+	    <button class="month" value="1">1月</button>
+	    <button class="month" value="2">2月</button>
+	    <button class="month" value="3">3月</button>
+	    <button class="month" value="4">4月</button>
+	    <button class="month" value="5" >5月</button>
+	    <button class="month" value="6">6月</button>
+	    <button class="month" value="7">7月</button>
+	    <button class="month" value="8">8月</button>
+	    <button class="month" value="9">9月</button>
+	    <button class="month" value="10">10月</button>
+	    <button class="month" value="11">11月</button>
+	    <button class="month" value="12">12月</button>
+	    <button class="month" value="13">全部</button>
+	    <div class="actions">
+	    	<button class="export" id="exportButton">匯出</button>
+	    </div>
+	</div>
+	
+	<!-- 结果显示区域 -->
+    <table id="costTable">
+        <thead>
+            <tr>
+                <th>Frequency</th>
+                <th>Pricing Model</th>
+                <th>Subscription Name</th>
+                <th>Month</th>
+                <th>Total Cost</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 数据将在此处动态添加 -->
+        </tbody>
+    </table>
+    <script>
+	 
+    var monthButtons = document.querySelectorAll(".month");
+    monthButtons.forEach(function(button) {
+        button.addEventListener("click", function() {
+            monthButtons.forEach(function(btn) {
+                btn.classList.remove("active");
+            });
+            this.classList.add("active");
+            var selectedMonth = this.value;
+        });
+    });
+    var data = [];
+    
+    // 当DOM准备就绪时执行
+    $(document).ready(function() {
+    	
+    	document.getElementById("exportButton").addEventListener("click", function() {
+    	    // 使用xlsx库创建一个新的工作簿
+    	    var wb = XLSX.utils.book_new();
+
+    	    // 获取表格数据
+    	    var table = document.getElementById("costTable");
+
+    	    // 复制表格以防止修改原始表格
+    	    var clonedTable = table.cloneNode(true);
+
+    	    // 获取表格的列数（最后一列的索引为列数减1）
+    	    var columnCount = clonedTable.rows[0].cells.length;
+
+    	    // 删除最后一列（最后一列的索引为列数减1）
+    	    var rows = clonedTable.rows;
+    	    for (var i = 0; i < rows.length; i++) {
+    	    	var columnCount1 = clonedTable.rows[i].cells.length;
+    	    	
+    	        var cell = rows[i].cells[columnCount1 - 1]; // 获取最后一列的单元格
+    	        if (cell) {
+    	            rows[i].deleteCell(columnCount1 - 1); // 删除最后一列的单元格
+    	        }
+    	    }
+
+    	    // 将表格数据转换为工作表
+    	    var ws = XLSX.utils.table_to_sheet(clonedTable);
+
+    	    // 将工作表添加到工作簿
+    	    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+    	    // 使用文件保存对话框保存工作簿为Excel文件
+    	    XLSX.writeFile(wb, "cost_data.xlsx");
+    	});
+
+
+    	
+        // 为所有月份按钮绑定点击事件
+        $(".month").click(function() {
+            // 获取所选月份（'all'表示选择所有月份）
+            var month = $(this).val();
+            // 发送选定的月份到后端API	
+            $.ajax({
+                url: "/macc/getCoatDataByDate", // 替换为你的后端API地址
+                type: "GET",
+                data: { month: month }, // 传递所选月份作为参数
+                dataType: "json", // 根据你的后端响应类型调整此处
+                success: function(response) {
+                    // 更新数据变量
+                    data = response;
+                    console.log("成功响应：", data);
+                    
+                    // 清空表格
+                    clearTable();
+
+                    // 填充表格
+                    populateTable();
+                },
+                error: function(xhr, status, error) {
+                    // 处理错误
+                    console.error("AJAX请求出错:", status, error);
+                }
+            });
+        });
+
+        // 清空表格
+        function clearTable() {
+            var tbody = document.getElementById("costTable").getElementsByTagName("tbody")[0];
+            tbody.innerHTML = ''; // 清空<tbody>内的所有内容
+        }
+        
+        function sendToBackendController(data) {
+        	var k=4;
+        	var rowData = [];
+        	for(var i = data.length - 2; k > 0; i--,k--){
+        		console.log(data[i]);
+        		rowData.push(data[i]);
+        	}
+        	
+        	 var url = "/macc/showDataDetails?" +
+             "frequency=" + encodeURIComponent(rowData[3]) +
+             "&pricingModel=" + encodeURIComponent(rowData[2]) +
+             "&subscriptionName=" + encodeURIComponent(rowData[1]) +
+             "&month=" + encodeURIComponent(rowData[0]);
+         	window.location.href = url;
+            
+        }
+        
+        // 根据Frequency和Pricing Model计算数据并填充表格
+        function populateTable() {
+            var groupedData = {};
+            for (var i = 0; i < data.length; i++) {
+                var entry = data[i];
+                var frequency = entry[0];
+                var pricingModel = entry[1];
+                var subscriptionName = entry[2];
+                var month = entry[3];
+                var totalCost = entry[4];
+                
+                if (!groupedData[frequency]) {
+                    groupedData[frequency] = {};	
+                }
+                
+                if (!groupedData[frequency][pricingModel]) {
+                    groupedData[frequency][pricingModel] = { total: 0, items: [] };
+                }
+                
+                groupedData[frequency][pricingModel].total += totalCost;
+                groupedData[frequency][pricingModel].items.push([subscriptionName, month, totalCost]);
+            }
+
+            // 获取表格的tbody元素
+            var tbody = document.getElementById("costTable").getElementsByTagName("tbody")[0];
+            
+            // 遍历并填充表格
+            // ...
+
+// 遍历并填充表格
+for (var frequency in groupedData) {
+    for (var pricingModel in groupedData[frequency]) {
+        var group = groupedData[frequency][pricingModel];
+
+        for (var j = 0; j < group.items.length; j++) {
+            var item = group.items[j];
+            var row = document.createElement("tr");
+
+            if (j === 0) {
+                var frequencyCell = document.createElement("td");
+                frequencyCell.textContent = frequency;
+                frequencyCell.rowSpan = group.items.length;
+                row.appendChild(frequencyCell);
+
+                var pricingModelCell = document.createElement("td");
+                pricingModelCell.textContent = pricingModel;
+                pricingModelCell.rowSpan = group.items.length;
+                row.appendChild(pricingModelCell);
+            }
+
+            for (var k = 0; k < item.length; k++) {
+                var cell = document.createElement("td");
+                // 如果是"Total Cost"列，四舍五入为整数
+                if (k === 2) {
+                    cell.textContent = Math.round(item[k]);
+                } else {
+                    cell.textContent = item[k];
+                }
+                row.appendChild(cell);
+            }
+
+            // 添加详细信息按钮
+            var detailsCell = document.createElement("td");
+            var detailsButton = document.createElement("button");
+            detailsButton.textContent = "細項";
+            detailsButton.className = "details-button";
+            detailsButton.setAttribute("data-frequency", frequency);
+            detailsButton.setAttribute("data-pricingModel", pricingModel);
+
+            detailsButton.classList.add("custom-button-style"); // 添加自定义CSS类
+
+            detailsButton.addEventListener("click", function(event) {
+                var rowData = [];
+                var frequency = event.target.getAttribute("data-frequency");
+                var pricingModel = event.target.getAttribute("data-pricingModel");
+
+                rowData.push(frequency);
+                rowData.push(pricingModel);
+                var row = event.target.parentNode.parentNode;
+                var cells = row.getElementsByTagName("td");
+                for (var i = 0; i < cells.length - 1; i++) {
+                    rowData.push(cells[i].textContent);
+                }
+                sendToBackendController(rowData);
+
+            });
+
+            detailsCell.appendChild(detailsButton);
+            row.appendChild(detailsCell);
+
+            tbody.appendChild(row);
+        }
+
+        // 添加合计行
+        var totalRow = document.createElement("tr");
+        var totalCell = document.createElement("td");
+        totalCell.colSpan = 4;
+        totalCell.textContent = (pricingModel === "Reservation" ? "RI合計" : "非 RI合計") + " : ";
+        totalRow.appendChild(totalCell);
+
+        var totalCostCell = document.createElement("td");
+        totalCostCell.textContent = Math.round(group.total); // 四舍五入为整数
+        totalRow.appendChild(totalCostCell);
+
+        tbody.appendChild(totalRow);
+    }
+}
+
+
+            
+            // 添加总计行
+            var grandTotalRow = document.createElement("tr");
+            var grandTotalCell = document.createElement("td");
+            grandTotalCell.colSpan = 4;
+            grandTotalCell.textContent = "總計 : ";
+            grandTotalRow.appendChild(grandTotalCell);
+            
+            var grandTotalCostCell = document.createElement("td");
+            grandTotalCostCell.textContent = Object.keys(groupedData).reduce(function (acc, frequency) {
+                var frequencies = groupedData[frequency];
+                return acc + Object.keys(frequencies).reduce(function (subtotal, pricingModel) {
+                    return subtotal + frequencies[pricingModel].total;
+                }, 0);
+            }, 0).toFixed(0);
+            grandTotalRow.appendChild(grandTotalCostCell);
+            
+            tbody.appendChild(grandTotalRow);
+        }
+    });
+</script>
+
+</body>
+</html>
